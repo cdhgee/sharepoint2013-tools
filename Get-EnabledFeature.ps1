@@ -36,6 +36,7 @@ Function main
   }
 
   $params = @{Identity = $Feature; $scopeMappings[$Scope] = $Location; ErrorAction = SilentlyContinue}
+  $params
 
   $feat = Get-SPFeature @params
   $enabled = $feat -ne $null
