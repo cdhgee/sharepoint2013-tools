@@ -19,11 +19,8 @@ Param(
   [Parameter(Mandatory=$True)]
   [ValidateSet("Farm","WebApplication","SiteCollection","Site")]
   [string]$Scope,
-  [Parameter(Mandatory=$True)]
   [string]$Url,
   [string]$Feature,
-  [Parameter(ParameterSetName="Farm",Mandatory=$true)]
-  [switch]$Farm
 )
 
 
