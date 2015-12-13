@@ -42,7 +42,9 @@ Function main
   $enabled = $feat -ne $null
 
   New-Object PSObject -Property @{
-    $Scope = $Location
+    Scope = $Scope
+    Url = $Url
+    Feature = $Feature.DisplayName
     Enabled = $enabled
   }
 
