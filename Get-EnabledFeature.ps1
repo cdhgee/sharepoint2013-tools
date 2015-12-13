@@ -16,27 +16,20 @@
 
 [CmdletBinding()]
 Param(
-  [Parameter(ParameterSetName="WebApplication")]
-  [string]$IncludeCentralAdministration=$false,
-  [Parameter(ParameterSetName="SiteCollection", Mandatory=$true)]
-  [string]$WebApplication,
-  [Parameter(ParameterSetName="Site", Mandatory=$true)]
-  [string]$SiteCollection,
+  [Parameter(Mandatory=$True)]
+  [ValidateSet("Farm","WebApplication","SiteCollection","Site")]
+  [string]$Scope,
+  [Parameter(Mandatory=$True)]
+  [string]$Url,
+  [string]$Feature,
   [Parameter(ParameterSetName="Farm",Mandatory=$true)]
-  [Parameter(ParameterSetName="WebApplication", Mandatory=$true)]
-  [Parameter(ParameterSetName="SiteCollection", Mandatory=$true)]
-  [Parameter(ParameterSetName="Site", Mandatory=$true)]
-  [string]$Feature
+  [switch]$Farm
 )
 
-Function Get-FeatureStatus
+
+Function main
 {
-  [CmdletBinding()]
-  Param(
-    [BalidateSet("Farm","WebApplication","SiteCollection","Site")]
-    $Scope,
-    $Location
-  )
+  Add-PSSnapin Microsoft.SharePoint.Powershell -ErrorAction SilentlyContinue
 
   $scopeMappings = @{
     Farm = "Farm"
@@ -49,70 +42,12 @@ Function Get-FeatureStatus
 
   $feat = Get-SPFeature @params
   $enabled = $feat -ne $null
+
   New-Object PSObject -Property @{
-    $Scope = $ScopeLocation
+    $Scope = $Location
     Enabled = $enabled
   }
-}
 
-Function Get-FarmFeatures
-{
-  Get-FeatureStatus -Scope Farm -Location $True
-}
-
-Function Get-WebApplicationFeatures
-{
-  $webapps = Get-SPWebApplication -IncludeCentralAdministration:$IncludeCentralAdministration
-
-  Foreach($webapp in $webapps)
-  {
-    Get-FeatureStatus -Scope WebApplication -Location $webapp
-  }
-}
-
-Function Get-SiteCollectionFeatures
-{
-  $webapp = Get-SPWebApplication $WebApplication
-
-  Foreach($site in $webapp.Sites)
-  {
-    Get-FeatureStatus -Scope SiteCollection -Location $_
-  }
-}
-
-Function Get-SiteFeatures
-{
-  $sitecoll = Get-SPSiteCollection $SiteCollection
-
-  Foreach($web in $sitecoll.AllWebs)
-  {
-    Get-FeatureStatus -Scope SiteCollection -Location $web
-  }
-}
-
-Function main
-{
-  Import-PSSnapin Microsoft.SharePoint.Powershell -ErrorAction SilentlyContinue
-
-  Switch($PSCmdlet.ParameterSetName)
-  {
-    "Farm"
-    {
-      Get-FarmFeatures
-    }
-    "WebApplication"
-    {
-      Get-WebApplicationFeatures
-    }
-    "SiteCollection"
-    {
-      Get-SiteCollectionFeatures
-    }
-    "Site"
-    {
-      Get-SiteFeatures
-    }
-  }
 }
 
 
