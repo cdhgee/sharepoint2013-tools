@@ -16,26 +16,101 @@
 
 [CmdletBinding()]
 Param(
-  [Parameter(Mandatory=$true)]
+  [Parameter(ParameterSetName="WebApplication")]
+  [string]$IncludeCentralAdministration=$false,
+  [Parameter(ParameterSetName="SiteCollection", Mandatory=$true)]
   [string]$WebApplication,
-  [Parameter(Mandatory=$true)]
+  [Parameter(ParameterSetName="Site", Mandatory=$true)]
+  [string]$SiteCollection,
+  [Parameter(ParameterSetName="Farm",Mandatory=$true)]
+  [Parameter(ParameterSetName="WebApplication", Mandatory=$true)]
+  [Parameter(ParameterSetName="SiteCollection", Mandatory=$true)]
+  [Parameter(ParameterSetName="Site", Mandatory=$true)]
   [string]$Feature
 )
 
+Function Get-FeatureStatus
+{
+  [CmdletBinding()]
+  Param(
+    [BalidateSet("Farm","WebApplication","SiteCollection","Site")]
+    $Scope,
+    $Location
+  )
+
+  $scopeMappings = @{
+    Farm = "Farm"
+    WebApplication = "WebApplication"
+    SiteCollection = "Site"
+    Site = "Web"
+  }
+
+  $params = @{Identity = $Feature; $scopeMappings[$Scope] = $Location; ErrorAction = SilentlyContinue}
+
+  $feat = Get-SPFeature @params
+  $enabled = $feat -ne $null
+  New-Object PSObject -Property @{
+    $Scope = $ScopeLocation
+    Enabled = $enabled
+  }
+}
+
+Function Get-FarmFeatures
+{
+  Get-FeatureStatus -Scope Farm -Location $True
+}
+
+Function Get-WebApplicationFeatures
+{
+  $webapps = Get-SPWebApplication -IncludeCentralAdministration:$IncludeCentralAdministration
+
+  Foreach($webapp in $webapps)
+  {
+    Get-FeatureStatus -Scope WebApplication -Location $webapp
+  }
+}
+
+Function Get-SiteCollectionFeatures
+{
+  $webapp = Get-SPWebApplication $WebApplication
+
+  Foreach($site in $webapp.Sites)
+  {
+    Get-FeatureStatus -Scope SiteCollection -Location $_
+  }
+}
+
+Function Get-SiteFeatures
+{
+  $sitecoll = Get-SPSiteCollection $SiteCollection
+
+  Foreach($web in $sitecoll.AllWebs)
+  {
+    Get-FeatureStatus -Scope SiteCollection -Location $web
+  }
+}
 
 Function main
 {
   Import-PSSnapin Microsoft.SharePoint.Powershell -ErrorAction SilentlyContinue
 
-  $webapp = Get-SPWebApplication $webappurl
-
-  Foreach($site in $webapp.Sites)
+  Switch($PSCmdlet.ParameterSetName)
   {
-    $feature = Get-SPFeature -Identity $Feature -Site $_ -ErrorAction SilentlyContinue
-    $enabled = $feat -ne $null
-    New-Object PSObject -Property @{
-      Site = $_.Url
-      Enabled = $enabled
+    "Farm"
+    {
+      Get-FarmFeatures
+    }
+    "WebApplication"
+    {
+      Get-WebApplicationFeatures
+    }
+    "SiteCollection"
+    {
+      Get-SiteCollectionFeatures
+    }
+    "Site"
+    {
+      Get-SiteFeatures
     }
   }
 }
