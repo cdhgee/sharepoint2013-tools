@@ -35,7 +35,7 @@ Function main
     Site = "Web"
   }
 
-  $params = @{Identity = $Feature; $scopeMappings[$Scope] = $Location; ErrorAction = SilentlyContinue}
+  $params = @{Identity = $Feature; $scopeMappings[$Scope] = $Location; ErrorAction = "SilentlyContinue"}
   $params
 
   $feat = Get-SPFeature @params
