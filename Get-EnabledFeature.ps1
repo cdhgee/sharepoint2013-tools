@@ -20,7 +20,7 @@ Param(
   [ValidateSet("Farm","WebApplication","SiteCollection","Site")]
   [string]$Scope,
   [string]$Url,
-  [string]$Feature,
+  [string]$Feature
 )
 
 
